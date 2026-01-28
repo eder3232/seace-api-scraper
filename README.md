@@ -122,6 +122,36 @@ Puedes probar la API con Postman creando una **Collection** y usando como base U
 - **Method**: `GET`
 - **URL**: `{{base_url}}/jobs/{{job_id}}/result`
 
+**Respuesta esperada:**
+
+```json
+{
+  "job_id": "uuid",
+  "status": "succeeded",
+  "result": {
+    "departamento": "AREQUIPA",
+    "anio": "2025",
+    "total_registros": 150,
+    "csv_path": "/ruta/absoluta/data/procesos_AREQUIPA_2025.csv"
+  },
+  "error": null
+}
+```
+
+#### 6) Descargar CSV del Job (solo para jobs regionales)
+
+- **Method**: `GET`
+- **URL**: `{{base_url}}/jobs/{{job_id}}/download`
+
+**Descripción:** Descarga el archivo CSV generado por un job de tipo `regional`. El job debe estar completado (`status: "succeeded"`).
+
+**Respuesta:** Archivo CSV descargable con el nombre del archivo original.
+
+**Errores posibles:**
+- `404`: Job no encontrado
+- `400`: Job no completado o no es de tipo `regional`
+- `404`: Archivo CSV no encontrado
+
 ### Tests
 
 ```bash
