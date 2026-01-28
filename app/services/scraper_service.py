@@ -46,6 +46,9 @@ async def run_regional_scrape(
             await scraper.seleccionar_departamento(departamento)
             await scraper.desplegar_boton_para_seleccionar_anio_de_convocatoria()
             await scraper.seleccionar_anio_de_convocatoria(anio)
+
+            # Importante: la UI de SEACE no carga resultados hasta presionar "Buscar"
+            await scraper.click_boton_de_buscar()
             
             logger.info("Parámetros seleccionados, iniciando búsqueda...")
             df = await scraper.obtener_todas_las_paginas_de_procesos(nombre_archivo_csv=csv_name)

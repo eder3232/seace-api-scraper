@@ -256,6 +256,36 @@ class RegionalScraper(BaseScraper):
         try:
             container = self.page.locator(SELECTORS['results_container'])
             
+            # En modo debug, guardar HTML de resultados/paginador para análisis
+            if self.debug:
+                try:
+                    Path(self.config.DEBUG_DIR).mkdir(parents=True, exist_ok=True)
+                    page_idx = getattr(self, "_debug_page_idx", 1)
+                    setattr(self, "_debug_page_idx", page_idx)
+
+                    container_html = await container.evaluate("el => el.outerHTML")
+                    (Path(self.config.DEBUG_DIR) / f"regional_resultados_container_p{page_idx}.html").write_text(
+                        container_html, encoding="utf-8"
+                    )
+
+                    # Tabla (tbody) real de resultados
+                    tbody = container.locator(SELECTORS["results_table_body"])
+                    tbody_html = await tbody.evaluate("el => el.outerHTML")
+                    (Path(self.config.DEBUG_DIR) / f"regional_resultados_tbody_p{page_idx}.html").write_text(
+                        tbody_html, encoding="utf-8"
+                    )
+
+                    # Paginador inferior (si existe)
+                    paginator = self.page.locator(SELECTORS["pagination_container"])
+                    if await paginator.count() > 0:
+                        paginator_html = await paginator.evaluate("el => el.outerHTML")
+                        (Path(self.config.DEBUG_DIR) / f"regional_resultados_paginador_p{page_idx}.html").write_text(
+                            paginator_html, encoding="utf-8"
+                        )
+                except Exception as e:
+                    # Nunca romper el scraping por un fallo de debug-artefacts
+                    self.logger.warning(f"No se pudo guardar HTML de debug de resultados: {e}")
+
             # Verificar si el contenedor existe y es visible
             if not await container.is_visible(timeout=5000):
                 self.logger.warning("El contenedor de resultados no es visible")
@@ -430,6 +460,9 @@ class RegionalScraper(BaseScraper):
                 break
             
             numero_pagina += 1
+            # Para artefactos HTML de debug (1-indexed)
+            if self.debug:
+                setattr(self, "_debug_page_idx", numero_pagina)
             self.logger.info(f"\n{'='*60}")
             self.logger.info(f"Scrapeando página {numero_pagina}...")
             self.logger.info(f"{'='*60}")
