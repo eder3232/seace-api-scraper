@@ -8,7 +8,12 @@ Ejemplo:
 import argparse
 import asyncio
 import json
+import sys
 from pathlib import Path
+
+# Agregar el directorio raíz del proyecto al path
+PROJECT_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.scrapers.nomenclatura import NomenclaturaScraper
 

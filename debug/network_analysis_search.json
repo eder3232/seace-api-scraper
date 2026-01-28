@@ -1,0 +1,179 @@
+{
+  "meta": {
+    "before_ts": "2026-01-28T15:33:02.467905",
+    "after_ts": "2026-01-28T15:33:18.238017",
+    "include_static": false,
+    "ajax_resource_types": [
+      "xhr",
+      "fetch"
+    ]
+  },
+  "counts": {
+    "new_requests": 6,
+    "new_responses": 6,
+    "ajax_requests": 5,
+    "ajax_responses": 5
+  },
+  "new_requests": [
+    {
+      "url": "https://www.google.com/recaptcha/api2/reload?k=6Lfhnb0pAAAAAB3RxPrOlihIByQUBjpZCAjX-cY2",
+      "method": "POST",
+      "resource_type": "xhr",
+      "timestamp": "2026-01-28T15:33:02.592116"
+    },
+    {
+      "url": "https://prod2.seace.gob.pe/seacebus-uiwd-pub/javax.faces.resource/images/ui-bg_diagonals-thick_20_666666_40x40.png.xhtml?ln=primefaces-ui-lightness",
+      "method": "GET",
+      "resource_type": "image",
+      "timestamp": "2026-01-28T15:33:02.728523"
+    },
+    {
+      "url": "https://prod2.seace.gob.pe/seacebus-uiwd-pub/buscadorPublico/buscadorPublico.xhtml;jsessionid=sDTYyLmiVqM8xf8QL_BOqzISN5g_q-1aLQTQ8XkG.slave3:seace-main",
+      "method": "POST",
+      "resource_type": "xhr",
+      "timestamp": "2026-01-28T15:33:02.728889"
+    },
+    {
+      "url": "https://www.google.com/recaptcha/api2/clr?k=6Lfhnb0pAAAAAB3RxPrOlihIByQUBjpZCAjX-cY2",
+      "method": "POST",
+      "resource_type": "fetch",
+      "timestamp": "2026-01-28T15:33:02.734827"
+    },
+    {
+      "url": "https://prod2.seace.gob.pe/seacebus-uiwd-pub/buscadorPublico/buscadorPublico.xhtml;jsessionid=sDTYyLmiVqM8xf8QL_BOqzISN5g_q-1aLQTQ8XkG.slave3:seace-main",
+      "method": "POST",
+      "resource_type": "xhr",
+      "timestamp": "2026-01-28T15:33:09.412791"
+    },
+    {
+      "url": "https://prod2.seace.gob.pe/seacebus-uiwd-pub/buscadorPublico/buscadorPublico.xhtml;jsessionid=sDTYyLmiVqM8xf8QL_BOqzISN5g_q-1aLQTQ8XkG.slave3:seace-main",
+      "method": "POST",
+      "resource_type": "xhr",
+      "timestamp": "2026-01-28T15:33:15.209105"
+    }
+  ],
+  "new_responses": [
+    {
+      "url": "https://www.google.com/recaptcha/api2/reload?k=6Lfhnb0pAAAAAB3RxPrOlihIByQUBjpZCAjX-cY2",
+      "status": 200,
+      "status_text": "",
+      "method": "POST",
+      "content_type": "application/json; charset=utf-8",
+      "timestamp": "2026-01-28T15:33:02.690732"
+    },
+    {
+      "url": "https://prod2.seace.gob.pe/seacebus-uiwd-pub/javax.faces.resource/images/ui-bg_diagonals-thick_20_666666_40x40.png.xhtml?ln=primefaces-ui-lightness",
+      "status": 200,
+      "status_text": "OK",
+      "method": "GET",
+      "content_type": "image/png",
+      "timestamp": "2026-01-28T15:33:02.844326"
+    },
+    {
+      "url": "https://www.google.com/recaptcha/api2/clr?k=6Lfhnb0pAAAAAB3RxPrOlihIByQUBjpZCAjX-cY2",
+      "status": 200,
+      "status_text": "",
+      "method": "POST",
+      "content_type": "application/binary",
+      "timestamp": "2026-01-28T15:33:02.850612"
+    },
+    {
+      "url": "https://prod2.seace.gob.pe/seacebus-uiwd-pub/buscadorPublico/buscadorPublico.xhtml;jsessionid=sDTYyLmiVqM8xf8QL_BOqzISN5g_q-1aLQTQ8XkG.slave3:seace-main",
+      "status": 200,
+      "status_text": "OK",
+      "method": "POST",
+      "content_type": "text/xml;charset=UTF-8",
+      "timestamp": "2026-01-28T15:33:03.009795"
+    },
+    {
+      "url": "https://prod2.seace.gob.pe/seacebus-uiwd-pub/buscadorPublico/buscadorPublico.xhtml;jsessionid=sDTYyLmiVqM8xf8QL_BOqzISN5g_q-1aLQTQ8XkG.slave3:seace-main",
+      "status": 200,
+      "status_text": "OK",
+      "method": "POST",
+      "content_type": "text/xml; charset=UTF-8",
+      "timestamp": "2026-01-28T15:33:09.553362"
+    },
+    {
+      "url": "https://prod2.seace.gob.pe/seacebus-uiwd-pub/buscadorPublico/buscadorPublico.xhtml;jsessionid=sDTYyLmiVqM8xf8QL_BOqzISN5g_q-1aLQTQ8XkG.slave3:seace-main",
+      "status": 200,
+      "status_text": "OK",
+      "method": "POST",
+      "content_type": "text/html; charset=UTF-8",
+      "timestamp": "2026-01-28T15:33:15.357857"
+    }
+  ],
+  "ajax_requests": [
+    {
+      "url": "https://www.google.com/recaptcha/api2/reload?k=6Lfhnb0pAAAAAB3RxPrOlihIByQUBjpZCAjX-cY2",
+      "method": "POST",
+      "resource_type": "xhr",
+      "timestamp": "2026-01-28T15:33:02.592116"
+    },
+    {
+      "url": "https://prod2.seace.gob.pe/seacebus-uiwd-pub/buscadorPublico/buscadorPublico.xhtml;jsessionid=sDTYyLmiVqM8xf8QL_BOqzISN5g_q-1aLQTQ8XkG.slave3:seace-main",
+      "method": "POST",
+      "resource_type": "xhr",
+      "timestamp": "2026-01-28T15:33:02.728889"
+    },
+    {
+      "url": "https://www.google.com/recaptcha/api2/clr?k=6Lfhnb0pAAAAAB3RxPrOlihIByQUBjpZCAjX-cY2",
+      "method": "POST",
+      "resource_type": "fetch",
+      "timestamp": "2026-01-28T15:33:02.734827"
+    },
+    {
+      "url": "https://prod2.seace.gob.pe/seacebus-uiwd-pub/buscadorPublico/buscadorPublico.xhtml;jsessionid=sDTYyLmiVqM8xf8QL_BOqzISN5g_q-1aLQTQ8XkG.slave3:seace-main",
+      "method": "POST",
+      "resource_type": "xhr",
+      "timestamp": "2026-01-28T15:33:09.412791"
+    },
+    {
+      "url": "https://prod2.seace.gob.pe/seacebus-uiwd-pub/buscadorPublico/buscadorPublico.xhtml;jsessionid=sDTYyLmiVqM8xf8QL_BOqzISN5g_q-1aLQTQ8XkG.slave3:seace-main",
+      "method": "POST",
+      "resource_type": "xhr",
+      "timestamp": "2026-01-28T15:33:15.209105"
+    }
+  ],
+  "ajax_responses": [
+    {
+      "url": "https://www.google.com/recaptcha/api2/reload?k=6Lfhnb0pAAAAAB3RxPrOlihIByQUBjpZCAjX-cY2",
+      "status": 200,
+      "status_text": "",
+      "method": "POST",
+      "content_type": "application/json; charset=utf-8",
+      "timestamp": "2026-01-28T15:33:02.690732"
+    },
+    {
+      "url": "https://www.google.com/recaptcha/api2/clr?k=6Lfhnb0pAAAAAB3RxPrOlihIByQUBjpZCAjX-cY2",
+      "status": 200,
+      "status_text": "",
+      "method": "POST",
+      "content_type": "application/binary",
+      "timestamp": "2026-01-28T15:33:02.850612"
+    },
+    {
+      "url": "https://prod2.seace.gob.pe/seacebus-uiwd-pub/buscadorPublico/buscadorPublico.xhtml;jsessionid=sDTYyLmiVqM8xf8QL_BOqzISN5g_q-1aLQTQ8XkG.slave3:seace-main",
+      "status": 200,
+      "status_text": "OK",
+      "method": "POST",
+      "content_type": "text/xml;charset=UTF-8",
+      "timestamp": "2026-01-28T15:33:03.009795"
+    },
+    {
+      "url": "https://prod2.seace.gob.pe/seacebus-uiwd-pub/buscadorPublico/buscadorPublico.xhtml;jsessionid=sDTYyLmiVqM8xf8QL_BOqzISN5g_q-1aLQTQ8XkG.slave3:seace-main",
+      "status": 200,
+      "status_text": "OK",
+      "method": "POST",
+      "content_type": "text/xml; charset=UTF-8",
+      "timestamp": "2026-01-28T15:33:09.553362"
+    },
+    {
+      "url": "https://prod2.seace.gob.pe/seacebus-uiwd-pub/buscadorPublico/buscadorPublico.xhtml;jsessionid=sDTYyLmiVqM8xf8QL_BOqzISN5g_q-1aLQTQ8XkG.slave3:seace-main",
+      "status": 200,
+      "status_text": "OK",
+      "method": "POST",
+      "content_type": "text/html; charset=UTF-8",
+      "timestamp": "2026-01-28T15:33:15.357857"
+    }
+  ]
+}

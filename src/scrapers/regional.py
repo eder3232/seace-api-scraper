@@ -192,6 +192,13 @@ class RegionalScraper(BaseScraper):
         Hace click en el botón de buscar y espera inteligentemente a que los resultados se carguen.
         Usa la estrategia de espera configurada (producción o desarrollo).
         
+        El flujo es:
+        1. Preparar la espera de la petición AJAX ANTES del click
+        2. Hacer click en buscar
+        3. Esperar a que se complete la petición AJAX específica
+        4. Esperar a que termine de renderizar la UI
+        5. Validar que hay resultados
+        
         Raises:
             ElementNotFoundError: Si no se encuentra el botón
             ScrapingError: Si hay un error esperando los resultados
@@ -205,10 +212,21 @@ class RegionalScraper(BaseScraper):
             if not await button.is_visible(timeout=10000):
                 raise ElementNotFoundError("No se encontró el botón de buscar")
             
-            await button.click()
+            # Preparar la espera ANTES del click y hacer click dentro del context manager
+            # La estrategia configurará expect_response antes del click
+            self.logger.info("Preparando espera de resultados...")
+            
+            # Hacer click y esperar respuesta AJAX usando expect_response
+            await self.wait_strategy.click_and_wait_for_response(
+                self.page,
+                button,
+                WAIT_SELECTORS,
+                timeout=self.config.timeouts['network']
+            )
+            
             self.logger.info("Botón de buscar clickeado, esperando resultados...")
             
-            # Usar estrategia de espera configurada (producción o desarrollo)
+            # Esperar a que termine de renderizar y validar resultados
             await self.wait_strategy.wait_for_search_results(
                 self.page,
                 WAIT_SELECTORS,
@@ -237,13 +255,39 @@ class RegionalScraper(BaseScraper):
         
         try:
             container = self.page.locator(SELECTORS['results_container'])
+            
+            # Verificar si el contenedor existe y es visible
+            if not await container.is_visible(timeout=5000):
+                self.logger.warning("El contenedor de resultados no es visible")
+                return []
+            
+            # Obtener el texto del contenedor para verificar si hay mensaje de "sin resultados"
+            container_text = (await container.inner_text()).lower()
+            if any(msg in container_text for msg in ["no hay", "sin resultados", "no se encontraron"]):
+                self.logger.info("No se encontraron resultados en la búsqueda")
+                return []
+            
             tbody = container.locator(SELECTORS['results_table_body'])
             filas = await tbody.locator(SELECTORS['results_table_row']).all()
+            
+            if len(filas) == 0:
+                # Intentar buscar filas directamente desde el contenedor
+                filas_directas = await container.locator(SELECTORS['results_table_row']).all()
+                if len(filas_directas) > 0:
+                    filas = filas_directas
+                else:
+                    self.logger.warning("No se encontraron filas en la tabla")
+                    return []
             
             datos = []
             
             for fila in filas:
                 celdas = await fila.locator(SELECTORS['results_table_cell']).all()
+                
+                # Verificar que la fila tenga contenido válido (al menos algunas celdas con texto)
+                if len(celdas) == 0:
+                    continue
+                
                 fila_datos = []
                 
                 for indice in INDICES_COLUMNAS:
@@ -253,13 +297,17 @@ class RegionalScraper(BaseScraper):
                     else:
                         fila_datos.append("")
                 
-                datos.append(fila_datos)
+                # Solo agregar si la fila tiene algún contenido válido
+                if any(fila_datos):  # Si al menos un campo tiene contenido
+                    datos.append(fila_datos)
             
-            self.logger.debug(f"Extraídos {len(datos)} registros de la página actual")
+            self.logger.info(f"Extraídos {len(datos)} registros de la página actual")
             return datos
             
         except Exception as e:
             self.logger.error(f"Error al extraer datos: {e}")
+            import traceback
+            self.logger.error(traceback.format_exc())
             raise ScrapingError(f"Error al extraer datos: {e}") from e
     
     async def obtener_tabla_de_procesos(self, nombre_archivo_csv: Optional[str] = None) -> pd.DataFrame:
