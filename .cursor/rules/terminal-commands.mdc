@@ -1,0 +1,52 @@
+---
+description: Pedir al usuario ejecutar comandos en consola cuando sea necesario
+alwaysApply: true
+---
+
+# Ejecución de Comandos en Terminal
+
+## Regla Principal
+
+**NUNCA ejecutar comandos directamente en la terminal cuando:**
+- Requieren permisos especiales (git_write, network, all)
+- Son comandos de sistema (git, docker, make, pip install, etc.)
+- Pueden fallar por restricciones de sandbox
+
+## Comportamiento Esperado
+
+Cuando necesites ejecutar un comando que requiera permisos o que pueda fallar:
+
+1. **Explica qué comando necesita ejecutarse**
+2. **Indica por qué es necesario**
+3. **Proporciona el comando completo y listo para copiar**
+4. **Pide explícitamente al usuario que lo ejecute**
+
+## Ejemplos de Comandos que Requieren Ejecución Manual
+
+- `git clone`, `git add`, `git commit`, `git push`
+- `docker build`, `docker-compose up`
+- `make install`, `make test`, `make dev`
+- `pip install`, `pip install -e ".[dev]"`
+- Cualquier comando que modifique el sistema de archivos fuera del workspace
+- Comandos que requieren autenticación o permisos especiales
+
+## Formato de Solicitud
+
+Cuando necesites que el usuario ejecute un comando, usa este formato:
+
+```
+Por favor, ejecuta este comando en tu terminal:
+
+```bash
+[comando completo aquí]
+```
+
+Esto es necesario para [razón específica].
+```
+
+## Excepciones
+
+Puedes ejecutar directamente comandos de solo lectura que:
+- No requieren permisos especiales
+- Son operaciones de lectura (listar archivos, leer contenido)
+- No modifican el estado del sistema
