@@ -63,6 +63,7 @@ MIN_COLUMNAS_ESPERADAS = 10
 # Selectores para estrategia de espera
 WAIT_SELECTORS = {
     'results_container': SELECTORS['results_container'],
+    'results_table_body': SELECTORS['results_table_body'],  # Selector específico del tbody para validación robusta
     'results_table_row': SELECTORS['results_table_row'],
     'results_table_cell': SELECTORS['results_table_cell'],
     'min_columns': 12,  # Número mínimo de columnas esperadas en la tabla

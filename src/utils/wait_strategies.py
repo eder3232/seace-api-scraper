@@ -178,6 +178,7 @@ class ProductionWaitStrategy(WaitStrategy):
         cell_selector = selectors.get('results_table_cell', 'td')
         min_columns = selectors.get('min_columns', 12)
         container_selector = selectors.get('results_container', 'body')
+        tbody_selector = selectors.get('results_table_body')  # Selector específico del tbody si está disponible
 
         # Buscar filas dentro del contenedor de resultados (más robusto y coincide con los tests)
         container_locator = await _maybe_await(page.locator(container_selector))
@@ -187,9 +188,21 @@ class ProductionWaitStrategy(WaitStrategy):
         if container_count == 0:
             raise TableNotFoundError("El contenedor de resultados no se encuentra")
         
-        # Buscar filas dentro del contenedor
-        rows_locator = await _maybe_await(container_locator.locator(table_selector))
-        rows = await rows_locator.all()
+        # Esperar un tiempo adicional ANTES de buscar filas para asegurar que el DOM se haya actualizado
+        # Esto es especialmente importante después de búsquedas AJAX que pueden tardar en renderizar
+        logger.debug("Esperando tiempo adicional para que el DOM se actualice...")
+        await asyncio.sleep(1.5)  # Delay adicional antes de buscar filas
+        
+        # Si tenemos selector específico del tbody, usarlo directamente (más preciso)
+        if tbody_selector:
+            tbody_locator = await _maybe_await(page.locator(tbody_selector))
+            rows_locator = await _maybe_await(tbody_locator.locator(table_selector))
+            rows = await rows_locator.all()
+            logger.debug(f"Buscando filas desde tbody específico: {len(rows)} encontradas")
+        else:
+            # Fallback: buscar desde el contenedor
+            rows_locator = await _maybe_await(container_locator.locator(table_selector))
+            rows = await rows_locator.all()
         
         logger.debug(f"Filas encontradas en contenedor: {len(rows)}")
         
@@ -209,13 +222,18 @@ class ProductionWaitStrategy(WaitStrategy):
                     if any(msg in container_text for msg in ["no hay", "sin resultados", "no se encontraron"]):
                         raise TableNotFoundError("No hay resultados en la búsqueda")
                     else:
-                        # Esperar un poco más y reintentar
+                        # Esperar más tiempo y reintentar (aumentado de 2s a 3s)
                         logger.debug("Esperando más tiempo para que se carguen las filas...")
-                        await asyncio.sleep(2)
+                        await asyncio.sleep(3)  # Aumentado de 2s a 3s
                         rows_locator = await _maybe_await(container_locator.locator(table_selector))
                         rows = await rows_locator.all()
                         if len(rows) == 0:
-                            raise TableNotFoundError("La tabla está vacía después de esperar")
+                            # Último intento: buscar directamente desde page después del delay
+                            page_rows_locator = await _maybe_await(page.locator(table_selector))
+                            page_rows = await page_rows_locator.all()
+                            if len(page_rows) == 0:
+                                raise TableNotFoundError("La tabla está vacía después de esperar")
+                            rows = page_rows
                 except Exception as e:
                     if isinstance(e, TableNotFoundError):
                         raise
@@ -393,22 +411,56 @@ class DevelopmentWaitStrategy(WaitStrategy):
         cell_selector = selectors.get('results_table_cell', 'td')
         min_columns = selectors.get('min_columns', 12)
         container_selector = selectors.get('results_container', 'body')
+        tbody_selector = selectors.get('results_table_body')  # Selector específico del tbody si está disponible
 
         container_locator = await _maybe_await(page.locator(container_selector))
-        rows_locator = await _maybe_await(container_locator.locator(table_selector))
-        rows = await rows_locator.all()
+        
+        # Verificar si el contenedor existe
+        container_count = await container_locator.count()
+        if container_count == 0:
+            raise TableNotFoundError("El contenedor de resultados no se encuentra")
+        
+        # Esperar tiempo adicional para que el DOM se actualice
+        logger.debug("Esperando tiempo adicional para que el DOM se actualice...")
+        await asyncio.sleep(1.5)
+        
+        # Si tenemos selector específico del tbody, usarlo directamente (más preciso)
+        if tbody_selector:
+            tbody_locator = await _maybe_await(page.locator(tbody_selector))
+            rows_locator = await _maybe_await(tbody_locator.locator(table_selector))
+            rows = await rows_locator.all()
+            logger.debug(f"Buscando filas desde tbody específico: {len(rows)} encontradas")
+        else:
+            # Fallback: buscar desde el contenedor
+            rows_locator = await _maybe_await(container_locator.locator(table_selector))
+            rows = await rows_locator.all()
         
         if len(rows) == 0:
+            # Fallback: buscar directamente desde page
+            logger.debug("Intentando buscar filas directamente desde page...")
             page_rows_locator = await _maybe_await(page.locator(table_selector))
             page_rows = await page_rows_locator.all()
             if len(page_rows) > 0:
                 rows = page_rows
             else:
+                # Verificar mensaje de "no hay resultados"
                 container_text = (await container_locator.inner_text()).lower()
                 if any(msg in container_text for msg in ["no hay", "sin resultados", "no se encontraron"]):
                     raise TableNotFoundError("No hay resultados en la búsqueda")
                 else:
-                    raise TableNotFoundError("La tabla está vacía")
+                    # Esperar más y reintentar
+                    logger.debug("Esperando más tiempo para que se carguen las filas...")
+                    await asyncio.sleep(3)
+                    if tbody_selector:
+                        tbody_locator = await _maybe_await(page.locator(tbody_selector))
+                        rows_locator = await _maybe_await(tbody_locator.locator(table_selector))
+                        rows = await rows_locator.all()
+                    else:
+                        rows_locator = await _maybe_await(container_locator.locator(table_selector))
+                        rows = await rows_locator.all()
+                    
+                    if len(rows) == 0:
+                        raise TableNotFoundError("La tabla está vacía después de esperar")
         
         primera_fila = rows[0]
         celdas_locator = await _maybe_await(primera_fila.locator(cell_selector))

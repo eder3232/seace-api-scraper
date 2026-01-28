@@ -85,8 +85,15 @@ class NomenclaturaScraper(BaseScraper):
     
     async def click_boton_de_buscar(self):
         """
-        Hace click en el botón de buscar y espera a que los resultados se carguen.
+        Hace click en el botón de buscar y espera inteligentemente a que los resultados se carguen.
         Usa la estrategia de espera configurada (producción o desarrollo).
+        
+        El flujo es:
+        1. Preparar la espera de la petición AJAX ANTES del click
+        2. Hacer click en buscar
+        3. Esperar a que se complete la petición AJAX específica
+        4. Esperar a que termine de renderizar la UI
+        5. Validar que hay resultados
         
         Raises:
             ElementNotFoundError: Si no se encuentra el botón
@@ -101,10 +108,21 @@ class NomenclaturaScraper(BaseScraper):
             if not await button.is_visible(timeout=10000):
                 raise ElementNotFoundError("No se encontró el botón de buscar")
             
-            await button.click()
+            # Preparar la espera ANTES del click y hacer click dentro del context manager
+            # La estrategia configurará expect_response antes del click
+            self.logger.info("Preparando espera de resultados...")
+            
+            # Hacer click y esperar respuesta AJAX usando expect_response
+            await self.wait_strategy.click_and_wait_for_response(
+                self.page,
+                button,
+                WAIT_SELECTORS,
+                timeout=self.config.timeouts['network']
+            )
+            
             self.logger.info("Botón de buscar clickeado, esperando resultados...")
             
-            # Usar estrategia de espera configurada
+            # Esperar a que termine de renderizar y validar resultados
             await self.wait_strategy.wait_for_search_results(
                 self.page,
                 WAIT_SELECTORS,

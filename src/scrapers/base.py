@@ -175,7 +175,9 @@ class BaseScraper:
             
             await search_type_button.click()
             await self.page.wait_for_load_state("networkidle")
-            await asyncio.sleep(1)  # Pequeño delay
+            # Delay aumentado para asegurar que el DOM se actualice completamente
+            # (especialmente importante para que aparezca el botón "Búsqueda Avanzada")
+            await asyncio.sleep(2)  # Delay aumentado de 1s a 2s
             self.logger.info("Tipo de búsqueda seleccionado correctamente")
             
         except Exception as e:
@@ -196,7 +198,9 @@ class BaseScraper:
             container = self.page.locator("#tbBuscador\\:idFormBuscarProceso\\:pnlBuscarProceso")
             button = container.get_by_text("Búsqueda Avanzada")
             
-            if not await button.is_visible(timeout=10000):
+            # Timeout aumentado y espera más tolerante para producción
+            # El botón puede tardar en aparecer después de select_search_type()
+            if not await button.is_visible(timeout=15000):  # Aumentado de 10s a 15s
                 raise ScrapingError("No se encontró el botón de búsqueda avanzada")
             
             await button.click()
