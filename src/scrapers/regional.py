@@ -301,13 +301,15 @@ class RegionalScraper(BaseScraper):
             filas = await tbody.locator(SELECTORS['results_table_row']).all()
             
             if len(filas) == 0:
-                # Intentar buscar filas directamente desde el contenedor
-                filas_directas = await container.locator(SELECTORS['results_table_row']).all()
-                if len(filas_directas) > 0:
-                    filas = filas_directas
-                else:
+                # Fallback seguro: seguir scopiando al `<tbody>` real (nunca al contenedor grande),
+                # para no capturar filas del layout/paginador.
+                filas_directas = await self.page.locator(SELECTORS['results_table_body']).locator(
+                    SELECTORS['results_table_row']
+                ).all()
+                if len(filas_directas) == 0:
                     self.logger.warning("No se encontraron filas en la tabla")
                     return []
+                filas = filas_directas
             
             datos = []
             

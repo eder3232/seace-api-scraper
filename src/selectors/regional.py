@@ -29,7 +29,10 @@ SELECTORS = {
     # Tabla de resultados
     'results_container': '#tbBuscador\\:idFormBuscarProceso\\:pnlGrdResultadosProcesos',
     'results_table_body': '#tbBuscador\\:idFormBuscarProceso\\:dtProcesos_data',
-    'results_table_row': 'tbody tr',
+    # IMPORTANTE: `results_table_body` ya es un `<tbody>`, así que aquí deben ser filas directas.
+    # Si usamos `tbody tr` desde un `<tbody>`, no encuentra nada y fuerza fallbacks peligrosos
+    # que terminan capturando `tr` del layout/paginador (contaminando el CSV).
+    'results_table_row': 'tr',
     'results_table_cell': 'td',
     
     # Paginador
