@@ -4,11 +4,8 @@ Permite diferentes comportamientos en producción vs desarrollo.
 """
 
 import asyncio
-import json
 import inspect
-from pathlib import Path
-from typing import Optional, Dict, List
-from datetime import datetime
+from typing import Optional
 
 from ..utils.exceptions import ScrapingError, TableNotFoundError, InvalidTableStructureError
 from ..utils.logging import get_logger
@@ -164,8 +161,10 @@ class DevelopmentWaitStrategy(WaitStrategy):
             debug_output_dir: Directorio donde guardar análisis de red
         """
         self.debug_output_dir = debug_output_dir
-        self._network_requests = []
-        self._network_responses = []
+        # Devtool reutilizable para monitorear red (se adjunta una sola vez).
+        from ..devtools.network_monitor import NetworkMonitor
+
+        self._monitor = NetworkMonitor(output_dir=debug_output_dir, enabled=True)
         self._monitoring_enabled = False
     
     async def wait_for_search_results(
@@ -179,10 +178,10 @@ class DevelopmentWaitStrategy(WaitStrategy):
         """
         # Habilitar captura de red
         self._setup_network_capture(page)
-        
+
         # Capturar estado ANTES del click (si ya se hizo)
-        network_before = self._capture_snapshot()
-        logger.info(f"Estado ANTES: {len(network_before['requests'])} peticiones")
+        network_before = self._monitor.snapshot()
+        logger.info(f"Estado ANTES: {len(network_before.requests)} peticiones")
         
         try:
             # Esperar respuesta AJAX (igual que producción)
@@ -212,11 +211,11 @@ class DevelopmentWaitStrategy(WaitStrategy):
             
             # Capturar estado DESPUÉS y analizar
             await asyncio.sleep(1)  # Dar tiempo a que lleguen todas las respuestas
-            network_after = self._capture_snapshot()
-            logger.info(f"Estado DESPUÉS: {len(network_after['requests'])} peticiones")
-            
+            network_after = self._monitor.snapshot()
+            logger.info(f"Estado DESPUÉS: {len(network_after.requests)} peticiones")
+
             # Analizar cambios
-            analysis = self._analyze_changes(network_before, network_after)
+            analysis = self._monitor.analyze(network_before, network_after)
             self._log_analysis(analysis)
             self._save_analysis(analysis, "network_analysis_search.json")
             
@@ -230,100 +229,31 @@ class DevelopmentWaitStrategy(WaitStrategy):
         """Configura captura de red (solo en desarrollo)."""
         if self._monitoring_enabled:
             return
-        
-        def on_request(request):
-            self._network_requests.append({
-                'url': request.url,
-                'method': request.method,
-                'resource_type': request.resource_type,
-                'timestamp': datetime.now().isoformat(),
-            })
-            logger.debug(f"Request: {request.method} {request.url}")
-        
-        def on_response(response):
-            try:
-                self._network_responses.append({
-                    'url': response.url,
-                    'status': response.status,
-                    'status_text': response.status_text,
-                    'content_type': response.headers.get('content-type', ''),
-                    'timestamp': datetime.now().isoformat(),
-                })
-                logger.debug(f"Response: {response.status} {response.url}")
-            except Exception as e:
-                logger.warning(f"Error capturando respuesta: {e}")
-        
-        page.on("request", on_request)
-        page.on("response", on_response)
+
+        self._monitor.attach(page)
         self._monitoring_enabled = True
         logger.info("Monitoreo de red habilitado")
-    
-    def _capture_snapshot(self) -> dict:
-        """Captura snapshot actual del estado de red."""
-        return {
-            'requests': self._network_requests.copy(),
-            'responses': self._network_responses.copy(),
-            'timestamp': datetime.now().isoformat(),
-        }
-    
-    def _analyze_changes(self, before: dict, after: dict) -> dict:
-        """Analiza cambios entre snapshots."""
-        before_urls = {req['url'] for req in before['requests']}
-        
-        new_requests = [req for req in after['requests'] if req['url'] not in before_urls]
-        new_responses = [resp for resp in after['responses'] if resp['url'] not in before_urls]
-        
-        # Filtrar recursos estáticos
-        static_extensions = {'.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.woff', '.woff2', '.ttf'}
-        relevant_requests = [
-            req for req in new_requests
-            if not any(req['url'].lower().endswith(ext) for ext in static_extensions)
-        ]
-        
-        # Identificar peticiones AJAX/XHR
-        ajax_requests = [req for req in relevant_requests if req['resource_type'] in ['xhr', 'fetch']]
-        ajax_responses = [
-            resp for resp in new_responses
-            if any(resp['url'] == req['url'] for req in ajax_requests)
-        ]
-        
-        return {
-            'total_new_requests': len(new_requests),
-            'total_new_responses': len(new_responses),
-            'relevant_requests': len(relevant_requests),
-            'ajax_requests': len(ajax_requests),
-            'ajax_requests_details': ajax_requests,
-            'ajax_responses_details': ajax_responses,
-        }
     
     def _log_analysis(self, analysis: dict):
         """Loggea resumen del análisis."""
         logger.info("=" * 60)
         logger.info("ANÁLISIS DE RED - Resumen:")
-        logger.info(f"  - Nuevas peticiones totales: {analysis['total_new_requests']}")
-        logger.info(f"  - Peticiones relevantes: {analysis['relevant_requests']}")
-        logger.info(f"  - Peticiones AJAX/XHR: {analysis['ajax_requests']}")
+        counts = analysis.get("counts", {})
+        logger.info(f"  - Nuevas peticiones totales: {counts.get('new_requests')}")
+        logger.info(f"  - Nuevas respuestas totales: {counts.get('new_responses')}")
+        logger.info(f"  - Peticiones AJAX/XHR: {counts.get('ajax_requests')}")
         logger.info("=" * 60)
-        
-        if analysis['ajax_requests_details']:
+
+        ajax_details = analysis.get("ajax_requests", [])
+        if ajax_details:
             logger.info("Peticiones AJAX/XHR detectadas:")
-            for req in analysis['ajax_requests_details']:
-                logger.info(f"  - {req['method']} {req['url']}")
+            for req in ajax_details:
+                logger.info(f"  - {req.get('method')} {req.get('url')}")
     
     def _save_analysis(self, analysis: dict, filename: str):
         """Guarda análisis en archivo JSON."""
         try:
-            from pathlib import Path
-            import json
-            
-            debug_path = Path(self.debug_output_dir)
-            debug_path.mkdir(parents=True, exist_ok=True)
-            
-            file_path = debug_path / filename
-            with open(file_path, 'w', encoding='utf-8') as f:
-                json.dump(analysis, f, indent=2, ensure_ascii=False)
-            
-            logger.info(f"Análisis de red guardado en {file_path}")
+            self._monitor.save_json(analysis, filename)
         except Exception as e:
             logger.warning(f"No se pudo guardar análisis de red: {e}")
     

@@ -276,3 +276,4 @@ Los scrapers de producción tienen una base sólida pero están sobrecargados co
 4. **Aprender del experimental:** Simplicidad, código directo, menos abstracciones
 
 El objetivo es crear scrapers que sean **robustos pero simples**, **flexibles pero con buenos defaults**, y **fáciles de mantener y extender**.
+

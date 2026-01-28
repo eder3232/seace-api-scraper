@@ -89,40 +89,45 @@ class TestDevelopmentWaitStrategy:
     def test_init(self, strategy):
         """Test que verifica inicialización."""
         assert strategy.debug_output_dir == "test_debug"
-        assert strategy._network_requests == []
-        assert strategy._network_responses == []
+        assert strategy._monitor is not None
         assert strategy._monitoring_enabled == False
     
     def test_capture_snapshot(self, strategy):
         """Test que verifica captura de snapshot."""
-        strategy._network_requests = [{"url": "http://test.com", "method": "GET"}]
-        strategy._network_responses = [{"url": "http://test.com", "status": 200}]
-        
-        snapshot = strategy._capture_snapshot()
-        
-        assert len(snapshot['requests']) == 1
-        assert len(snapshot['responses']) == 1
-        assert 'timestamp' in snapshot
+        strategy._monitor.reset()
+        # Simular eventos ya capturados (evitamos attach real en tests unitarios)
+        strategy._monitor._requests = [{"url": "http://test.com", "method": "GET"}]
+        strategy._monitor._responses = [{"url": "http://test.com", "status": 200}]
+
+        snapshot = strategy._monitor.snapshot()
+
+        assert len(snapshot.requests) == 1
+        assert len(snapshot.responses) == 1
+        assert snapshot.timestamp
     
     def test_analyze_changes(self, strategy):
         """Test que verifica análisis de cambios."""
-        before = {
-            'requests': [{"url": "http://test.com/old"}],
-            'responses': [{"url": "http://test.com/old"}],
-        }
-        
-        after = {
-            'requests': [
+        from src.devtools.network_monitor import NetworkSnapshot
+
+        before = NetworkSnapshot(
+            timestamp="t0",
+            requests=[{"url": "http://test.com/old"}],
+            responses=[{"url": "http://test.com/old"}],
+        )
+
+        after = NetworkSnapshot(
+            timestamp="t1",
+            requests=[
                 {"url": "http://test.com/old"},
-                {"url": "http://test.com/new", "resource_type": "xhr"},
+                {"url": "http://test.com/new", "resource_type": "xhr", "method": "GET"},
             ],
-            'responses': [
+            responses=[
                 {"url": "http://test.com/old"},
-                {"url": "http://test.com/new"},
+                {"url": "http://test.com/new", "status": 200},
             ],
-        }
-        
-        analysis = strategy._analyze_changes(before, after)
-        
-        assert analysis['total_new_requests'] == 1
-        assert analysis['ajax_requests'] == 1
+        )
+
+        analysis = strategy._monitor.analyze(before, after)
+
+        assert analysis["counts"]["new_requests"] == 1
+        assert analysis["counts"]["ajax_requests"] == 1
